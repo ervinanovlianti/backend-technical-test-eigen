@@ -1,4 +1,3 @@
-// controllers/bookController.js
 const Book = require('../models/Book');
 
 // Controller untuk menampilkan semua buku

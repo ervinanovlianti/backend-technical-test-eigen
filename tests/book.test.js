@@ -1,12 +1,12 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const app = require('../app');
-
-chai.use(chaiHttp);
+const app = require('../app'); // Pastikan path menuju aplikasi Anda sesuai
 const expect = chai.expect;
 
+chai.use(chaiHttp);
+
 describe('Book API', () => {
-    // Pengujian untuk route mendapatkan semua buku
+    // Pengujian untuk menampilkan semua buku
     describe('GET /api/books', () => {
         it('should retrieve all books', (done) => {
             chai
@@ -20,13 +20,13 @@ describe('Book API', () => {
         });
     });
 
-    // Pengujian untuk route menambahkan buku baru
+    // Pengujian untuk menambahkan buku baru
     describe('POST /api/books', () => {
         it('should add a new book', (done) => {
             const newBook = {
-                code: 'JK-46',
-                title: 'New Book',
-                author: 'Author Name',
+                code: 'BK007',
+                title: 'Test Book 7',
+                author: 'Test Author',
                 stock: 5,
             };
 
@@ -37,14 +37,14 @@ describe('Book API', () => {
                 .end((err, res) => {
                     expect(res).to.have.status(201);
                     expect(res.body).to.be.an('object');
-                    expect(res.body.code).to.equal('JK-46');
+                    expect(res.body.code).to.equal('BK007');
                     done();
                 });
         });
 
         it('should not add a book without required fields', (done) => {
             const invalidBook = {
-                code: 'JK-47', // Tidak menyertakan field 'title', 'author', atau 'stock'
+                code: 'BK008', // Tidak menyertakan field 'title', 'author', atau 'stock'
             };
 
             chai
@@ -59,10 +59,10 @@ describe('Book API', () => {
         });
     });
 
-    // Pengujian untuk route mendapatkan buku berdasarkan kode buku
+    // Pengujian untuk mendapatkan buku berdasarkan Code
     describe('GET /api/books/:code', () => {
-        it('should retrieve a book by code', (done) => {
-            const bookCode = 'JK-46'; // Sesuaikan dengan kode buku yang telah ditambahkan sebelumnya
+        it('should retrieve a book by Code', (done) => {
+            const bookCode = 'BK007'; // Sesuaikan dengan Code buku yang telah ditambahkan sebelumnya
 
             chai
                 .request(app)
@@ -75,8 +75,8 @@ describe('Book API', () => {
                 });
         });
 
-        it('should return an error for non-existent book code', (done) => {
-            const nonExistentCode = 'JK-999'; // Kode buku yang tidak ada
+        it('should return an error for non-existent book Code', (done) => {
+            const nonExistentCode = '999'; // Code buku yang tidak ada
 
             chai
                 .request(app)
@@ -84,6 +84,42 @@ describe('Book API', () => {
                 .end((err, res) => {
                     expect(res).to.have.status(404);
                     expect(res.body).to.have.property('error');
+                    done();
+                });
+        });
+    });
+
+    // Pengujian untuk memperbarui buku berdasarkan Code
+    describe('PUT /api/books/:code', () => {
+        it('should update a book by Code', (done) => {
+            const bookCode = 'BK007'; // Sesuaikan dengan Code buku yang telah ditambahkan sebelumnya
+            const updatedBook = {
+                title: 'Updated Test Book',
+            };
+
+            chai
+                .request(app)
+                .put(`/api/books/${bookCode}`)
+                .send(updatedBook)
+                .end((err, res) => {
+                    expect(res).to.have.status(200);
+                    expect(res.body).to.be.an('object');
+                    expect(res.body.title).to.equal('Updated Test Book');
+                    done();
+                });
+        });
+    });
+
+    // Pengujian untuk menghapus buku berdasarkan Code
+    describe('DELETE /api/books/:code', () => {
+        it('should delete a book by Code', (done) => {
+            const code = 'BK007'; // Sesuaikan dengan Code buku yang telah ditambahkan sebelumnya
+
+            chai
+                .request(app)
+                .delete(`/api/books/${code}`)
+                .end((err, res) => {
+                    expect(res).to.have.status(200);
                     done();
                 });
         });

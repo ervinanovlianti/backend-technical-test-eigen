@@ -18,4 +18,8 @@ router.put('/members/:code', memberController.updateMember);
 // Rute untuk menghapus anggota berdasarkan kode anggota
 router.delete('/members/:code', memberController.deleteMember);
 
+router.post('/members/:code/borrow', memberController.borrowBook);
+
+router.post('/members/:code/return', memberController.returnBook);
+
 module.exports = router;
