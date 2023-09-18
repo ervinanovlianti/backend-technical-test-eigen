@@ -97,26 +97,32 @@ exports.borrowBook = async (req, res) => {
     try
     {
         const memberCode = req.params.code;
-        const bookCode = req.body.bookCode;
+        const bookCode = req.body.code;
 
-        // Temukan anggota dan buku yang dipinjam
+        // Temukan anggota dan buku yang dipinjam berdasarkan kode
         const member = await Member.findOne({ code: memberCode });
-        const book = await Book.findOne({ code: bookCode, isBorrowed: false });
+        const book = await Book.findOne({ code: bookCode });
 
-        if (!member || !book)
+        if (!member)
         {
             return res.status(404).json({ error: 'Member or book not found' });
         }
 
-        // Periksa syarat peminjaman
-        if (member.borrowedBooks.length >= 2)
+        // // Periksa syarat peminjaman
+        // if (member.booksBorrowed.length >= 2)
+        // {
+        //     return res.status(400).json({ error: 'Member cannot borrow more than 2 books' });
+        // }
+
+        if (book.isBorrowed)
         {
-            return res.status(400).json({ error: 'Member cannot borrow more than 2 books' });
+            return res.status(400).json({ error: 'Book is already borrowed' });
         }
 
-        // Meminjam buku
-        member.borrowedBooks.push(book);
+        // Tambahkan buku ke daftar buku yang dipinjam oleh anggota
+        member.booksBorrowed.push(bookCode); // Menggunakan bookCode sebagai referensi
         book.isBorrowed = true;
+        book.borrowedBy = memberCode; // Menyimpan kode anggota yang meminjam buku
 
         // Simpan perubahan ke basis data
         await member.save();
@@ -128,80 +134,47 @@ exports.borrowBook = async (req, res) => {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
-    // try
-    // {
-    //     const code = req.params.code;
-    //     const bookCode = req.body.bookCode;
-
-    //     // Temukan anggota dan buku yang dipinjam
-    //     const member = await Member.findOne({ code: code });
-    //     const book = await Book.findOne({ code: bookCode, isBorrowed: false });
-
-    //     if (!member || !book)
-    //     {
-    //         return res.status(404).json({ error: 'Member or book not found' });
-    //     }
-
-    //     // Periksa syarat peminjaman
-    //     if (member.borrowedBooks.length >= 2)
-    //     {
-    //         return res.status(400).json({ error: 'Member cannot borrow more than 2 books' });
-    //     }
-
-    //     // Meminjam buku
-    //     member.borrowedBooks.push(book);
-    //     book.isBorrowed = true;
-
-    //     // Simpan perubahan ke basis data
-    //     await member.save();
-    //     await book.save();
-
-    //     res.status(200).json({ message: 'Book borrowed successfully' });
-    // } catch (error)
-    // {
-    //     console.error(error);
-    //     res.status(500).json({ error: 'Internal Server Error' });
-    // }
 }
+
 
 // Kasus 2: Anggota mengembalikan buku
-exports.returnBook = async (req, res) => {
-    try
-    {
-        const code = req.params.code;
-        const bookCode = req.body.bookCode;
-        const returnDate = new Date(req.body.returnDate);
+// exports.returnBook = async (req, res) => {
+//     try
+//     {
+//         const code = req.params.code;
+//         const bookCode = req.body.code;
+//         const returnDate = new Date(req.body.returnDate);
 
-        // Temukan anggota dan buku yang dikembalikan
-        const member = await Member.findOne({ code: code });
-        const book = await Book.findOne({ code: bookCode, borrowedBy: code });
+//         // Temukan anggota dan buku yang dikembalikan
+//         const member = await Member.findOne({ code: code });
+//         const book = await Book.findOne({ code: bookCode, borrowedBy: code });
 
-        if (!member || !book)
-        {
-            return res.status(404).json({ error: 'Member or book not found' });
-        }
+//         if (!member || !book)
+//         {
+//             return res.status(404).json({ error: 'Member or book not found' });
+//         }
 
-        // Periksa apakah buku dikembalikan lebih dari 7 hari
-        const currentDate = new Date();
-        if (currentDate > returnDate)
-        {
-            // Terapkan hukuman pada anggota
-            member.penaltyStartDate = currentDate;
-            await member.save();
-            return res.status(400).json({ error: 'Book returned late. Penalty applied.' });
-        }
+//         // Periksa apakah buku dikembalikan lebih dari 7 hari
+//         const currentDate = new Date();
+//         if (currentDate > returnDate)
+//         {
+//             // Terapkan hukuman pada anggota
+//             member.penaltyStartDate = currentDate;
+//             await member.save();
+//             return res.status(400).json({ error: 'Book returned late. Penalty applied.' });
+//         }
 
-        // Mengembalikan buku
-        book.isBorrowed = false;
-        book.borrowedBy = null;
+//         // Mengembalikan buku
+//         book.isBorrowed = false;
+//         book.borrowedBy = null;
 
-        // Simpan perubahan ke basis data
-        await book.save();
+//         // Simpan perubahan ke basis data
+//         await book.save();
 
-        res.status(200).json({ message: 'Book returned successfully' });
-    } catch (error)
-    {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-}
+//         res.status(200).json({ message: 'Book returned successfully' });
+//     } catch (error)
+//     {
+//         console.error(error);
+//         res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// }
