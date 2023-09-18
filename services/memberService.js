@@ -63,17 +63,17 @@ exports.updateMember = async (code, name) => {
 };
 
 // Layanan untuk menghapus anggota berdasarkan kode anggota
-exports.deleteMember = async (code) => {
-    try
-    {
-        const deletedMember = await Member.findOneAndDelete({ code });
-        if (!deletedMember)
-        {
-            throw new Error('Anggota tidak ditemukan.');
-        }
-        return deletedMember;
-    } catch (error)
-    {
-        throw new Error('Terjadi kesalahan dalam menghapus anggota.');
-    }
-};
+// exports.deleteMember = async (code) => {
+//     try
+//     {
+//         const deletedMember = await Member.findOneAndDelete({ code });
+//         if (!deletedMember)
+//         {
+//             throw new Error('Anggota tidak ditemukan.');
+//         }
+//         return deletedMember;
+//     } catch (error)
+//     {
+//         throw new Error('Terjadi kesalahan dalam menghapus anggota.');
+//     }
+// };
