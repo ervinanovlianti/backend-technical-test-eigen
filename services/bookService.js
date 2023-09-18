@@ -70,7 +70,7 @@ exports.deleteBook = async (code) => {
         if (!deletedBook)
         {
             throw new Error('Buku tidak ditemukan.');
-        }
+        } 
         return deletedBook;
     } catch (error)
     {
