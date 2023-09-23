@@ -1,6 +1,6 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const app = require('../app'); // Pastikan path menuju aplikasi Anda sesuai
+const app = require('../app');
 const expect = chai.expect;
 
 chai.use(chaiHttp);
@@ -123,81 +123,154 @@ describe('Member API', () => {
         });
     });
 
-    // Kasus 1: Anggota meminjam buku
     describe('POST /api/members/:code/borrow', () => {
         it('should allow a member to borrow a book', (done) => {
-            const member = { code: 'M002', name: 'Angga', borrowedBooks: [], penaltyStartDate: null };
-            const book = { code: 'BK002', title: 'Test Book', author: 'Test Author', isBorrowed: false };
-
-            // Simulasikan penambahan anggota dan buku ke basis data
+            const requestData = {
+                // code: 'M006',
+                bookCode: 'BK007',
+            };
 
             chai
                 .request(app)
-                .post(`/api/members/${member.code}/borrow`)
-                .send({ bookCode: book.code })
+                .post('/api/members/M006/borrow')
+                .send(requestData)
                 .end((err, res) => {
                     expect(res).to.have.status(200);
+                    expect(res.body).to.be.an('object');
                     expect(res.body).to.have.property('message').equal('Book borrowed successfully');
                     done();
                 });
         });
 
-        it('should not allow borrowing a book that is already borrowed', (done) => {
-            const member1 = { code: 'M001', name: 'Angga', borrowedBooks: [], penaltyStartDate: null };
-            const member2 = { code: 'M002', name: 'Budi', borrowedBooks: [], penaltyStartDate: null };
-            const book = { code: 'BK001', title: 'Test Book', author: 'Test Author', isBorrowed: false };
-
-            // Simulasikan penambahan anggota, buku, dan member1 meminjam buku
-            // Kemudian, mencoba member2 meminjam buku yang sama
+        it('should not allow borrowing more than 2 books', (done) => {
+            // Pinjam buku pertama
+            const requestData1 = {
+                code: 'M001',
+                bookCode: 'BK002',
+            };
 
             chai
                 .request(app)
-                .post(`/api/members/${member2.code}/borrow`)
-                .send({ bookCode: book.code })
+                .post('/api/members/M001/borrow')
+                .send(requestData1)
+                .end(() => {
+                    // Pinjam buku kedua
+                    const requestData2 = {
+                        code: 'M001',
+                        bookCode: 'BK003',
+                    };
+
+                    chai
+                        .request(app)
+                        .post('/api/members/M001/borrow')
+                        .send(requestData2)
+                        .end(() => {
+                            // Coba pinjam buku ketiga
+                            const requestData3 = {
+                                code: 'M001',
+                                bookCode: 'BK004',
+                            };
+
+                            chai
+                                .request(app)
+                                .post('/api/members/M001/borrow')
+                                .send(requestData3)
+                                .end((err, res) => {
+                                    expect(res).to.have.status(400);
+                                    expect(res.body).to.have.property('error').equal('Member cannot borrow more than 2 books');
+                                    done();
+                                });
+                        });
+                });
+        });
+
+        it('should not allow borrowing an already borrowed book', (done) => {
+            // Pinjam buku yang sudah dipinjam oleh anggota lain
+            const requestData = {
+                code: 'M002',
+                bookCode: 'BK001',
+            };
+
+            chai
+                .request(app)
+                .post('/api/members/M002/borrow')
+                .send(requestData)
                 .end((err, res) => {
                     expect(res).to.have.status(400);
                     expect(res.body).to.have.property('error').equal('Book is already borrowed');
                     done();
                 });
         });
-    });
 
-    // Kasus 2: Anggota mengembalikan buku
-    describe('POST /api/members/:code/return', () => {
-        it('should allow a member to return a book', (done) => {
-            const member = { code: 'M001', name: 'Angga', borrowedBooks: ['BK001'], penaltyStartDate: null };
-            const book = { code: 'BK001', title: 'Test Book', author: 'Test Author', isBorrowed: true };
-
-            // Simulasikan penambahan anggota, buku, dan anggota meminjam buku
+        it('should return an error for non-existent member', (done) => {
+            const requestData = {
+                code: 'M999', // Kode member yang tidak ada
+                bookCode: 'BK001',
+            };
 
             chai
                 .request(app)
-                .post(`/api/members/${member.code}/return`)
-                .send({ bookCode: book.code, returnDate: new Date() })
+                .post('/api/members/M999/borrow')
+                .send(requestData)
+                .end((err, res) => {
+                    expect(res).to.have.status(404);
+                    expect(res.body).to.have.property('error').equal('Member or book not found');
+                    done();
+                });
+        });
+    });
+
+    describe('POST /api/members/:code/return', () => {
+        it('should allow a member to return a book', (done) => {
+            const requestData = {
+                code: 'M001',
+                bookCode: 'BK001',
+            };
+
+            chai
+                .request(app)
+                .post('/api/members/M001/return')
+                .send(requestData)
                 .end((err, res) => {
                     expect(res).to.have.status(200);
+                    expect(res.body).to.be.an('object');
                     expect(res.body).to.have.property('message').equal('Book returned successfully');
                     done();
                 });
         });
 
-        it('should not allow returning a book that does not belong to the member', (done) => {
-            const member = { code: 'M001', name: 'Angga', borrowedBooks: ['BK001'], penaltyStartDate: null };
-            const book = { code: 'BK002', title: 'Another Book', author: 'Another Author', isBorrowed: true };
-
-            // Simulasikan penambahan anggota, buku, dan anggota meminjam buku
+        it('should not allow returning a book that does not belong to them', (done) => {
+            const requestData = {
+                code: 'M001',
+                bookCode: 'BK002', // Kode buku yang tidak pernah dipinjam oleh M001
+            };
 
             chai
                 .request(app)
-                .post(`/api/members/${member.code}/return`)
-                .send({ bookCode: book.code, returnDate: new Date() })
+                .post('/api/members/M001/return')
+                .send(requestData)
                 .end((err, res) => {
                     expect(res).to.have.status(400);
                     expect(res.body).to.have.property('error').equal('Book does not belong to the member');
                     done();
                 });
         });
+
+        it('should return an error for non-existent member', (done) => {
+            const requestData = {
+                code: 'M999', // Kode member yang tidak ada
+                bookCode: 'BK001',
+            };
+
+            chai
+                .request(app)
+                .post('/api/members/M999/return')
+                .send(requestData)
+                .end((err, res) => {
+                    expect(res).to.have.status(404);
+                    expect(res.body).to.have.property('error').equal('Member or book not found');
+                    done();
+                });
+        });
     });
-
-
 });
