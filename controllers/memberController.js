@@ -1,180 +1,162 @@
 const Member = require('../models/Member');
 const Book = require('../models/Book');
 
-
-// Controller untuk menampilkan semua anggota
-exports.getAllMembers = async (req, res) => {
-    try
-    {
-        const members = await Member.find();
-        res.json(members);
-    } catch (error)
-    {
-        res.status(500).json({ error: 'Terjadi kesalahan dalam mengambil data anggota.' });
-    }
-};
-
-// Controller untuk menambahkan anggota baru
-exports.addMember = async (req, res) => {
-    const { code, name } = req.body;
-    if (!code || !name)
-    {
-        return res.status(400).json({ error: 'Kode dan nama anggota harus diisi.' });
-    }
-
-    try
-    {
-        const newMember = new Member({ code, name });
-        await newMember.save();
-        res.status(201).json(newMember);
-    } catch (error)
-    {
-        res.status(500).json({ error: 'Terjadi kesalahan dalam menambahkan anggota.' });
-    }
-};
-
-// Controller untuk menampilkan detail anggota berdasarkan kode anggota
-exports.getMemberByCode = async (req, res) => {
-    const { code } = req.params;
-
-    try
-    {
-        const member = await Member.findOne({ code });
-        if (!member)
+class memberController {
+    // Controller untuk menampilkan semua anggota
+    async getAllMembers(req, res) {
+        try
         {
-            return res.status(404).json({ error: 'Anggota tidak ditemukan.' });
+            const members = await Member.find();
+            res.status(200).json(members);
+        } catch (error)
+        {
+            res.status(500).json({ error: 'Terjadi kesalahan dalam mengambil data anggota.' });
         }
-        res.json(member);
-    } catch (error)
-    {
-        res.status(500).json({ error: 'Terjadi kesalahan dalam mengambil data anggota.' });
     }
-};
-
-// Controller untuk mengubah data anggota
-exports.updateMember = async (req, res) => {
-    const { code } = req.params;
-    const { name } = req.body;
-
-    try
-    {
-        const updatedMember = await Member.findOneAndUpdate(
-            { code },
-            { name },
-            { new: true }
-        );
-        if (!updatedMember)
+    async addMember(req, res) {
+        const { code, name } = req.body;
+        if (!code || !name)
         {
-            return res.status(404).json({ error: 'Anggota tidak ditemukan.' });
-        }
-        res.json(updatedMember);
-    } catch (error)
-    {
-        res.status(500).json({ error: 'Terjadi kesalahan dalam mengubah data anggota.' });
-    }
-};
-
-// Controller untuk menghapus anggota berdasarkan kode anggota
-exports.deleteMember = async (req, res) => {
-    const { code } = req.params;
-
-    try
-    {
-        const deletedMember = await Member.findOneAndDelete({ code });
-        if (!deletedMember)
-        {
-            return res.status(404).json({ error: 'Anggota tidak ditemukan.' });
-        }
-        res.json(deletedMember);
-    } catch (error)
-    {
-        res.status(500).json({ error: 'Terjadi kesalahan dalam menghapus anggota.' });
-    }
-};
-
-// Kasus 1: Anggota meminjam buku
-exports.borrowBook = async (req, res) => {
-    try
-    {
-        const memberCode = req.params.code;
-        const bookCode = req.body.code;
-
-        // Temukan anggota dan buku yang dipinjam berdasarkan kode
-        const member = await Member.findOne({ code: memberCode });
-        const book = await Book.findOne({ code: bookCode });
-
-        if (!member)
-        {
-            return res.status(404).json({ error: 'Member or book not found' });
+            return res.status(400).json({ error: 'Kode dan nama anggota harus diisi.' });
         }
 
-        // // Periksa syarat peminjaman
-        // if (member.booksBorrowed.length >= 2)
-        // {
-        //     return res.status(400).json({ error: 'Member cannot borrow more than 2 books' });
-        // }
-
-        if (book.isBorrowed)
+        try
         {
-            return res.status(400).json({ error: 'Book is already borrowed' });
+            const newMember = new Member({ code, name });
+            await newMember.save();
+            res.status(201).json(newMember);
+        } catch (error)
+        {
+            res.status(500).json({ error: 'Terjadi kesalahan dalam menambahkan anggota.' });
         }
+    };
 
-        // Tambahkan buku ke daftar buku yang dipinjam oleh anggota
-        member.booksBorrowed.push(bookCode); // Menggunakan bookCode sebagai referensi
-        book.isBorrowed = true;
-        book.borrowedBy = memberCode; // Menyimpan kode anggota yang meminjam buku
+    // Controller untuk menampilkan detail anggota berdasarkan kode anggota
+    async getMemberByCode(req, res) {
+        const { code } = req.params;
+        try
+        {
+            const member = await Member.findOne({ code });
+            if (!member)
+            {
+                return res.status(404).json({ error: 'Anggota tidak ditemukan.' });
+            }
+            res.json(member);
+        } catch (error)
+        {
+            res.status(500).json({ error: 'Terjadi kesalahan dalam mengambil data anggota.' });
+        }
+    };
 
-        // Simpan perubahan ke basis data
-        await member.save();
-        await book.save();
+    // Controller untuk mengubah data anggota
+    async updateMember(req, res) {
+        const { code } = req.params;
+        const { name } = req.body;
 
-        res.status(200).json({ message: 'Book borrowed successfully' });
-    } catch (error)
-    {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        try
+        {
+            const updatedMember = await Member.findOneAndUpdate(
+                { code },
+                { name },
+                { new: true }
+            );
+            if (!updatedMember)
+            {
+                return res.status(404).json({ error: 'Anggota tidak ditemukan.' });
+            }
+            res.json(updatedMember);
+        } catch (error)
+        {
+            res.status(500).json({ error: 'Terjadi kesalahan dalam mengubah data anggota.' });
+        }
+    };
+
+    // Controller untuk menghapus anggota berdasarkan kode anggota
+    async deleteMember(req, res) {
+        const { code } = req.params;
+
+        try
+        {
+            const deletedMember = await Member.findOneAndDelete({ code });
+            if (!deletedMember)
+            {
+                return res.status(404).json({ error: 'Anggota tidak ditemukan.' });
+            }
+            res.json(deletedMember);
+        } catch (error)
+        {
+            res.status(500).json({ error: 'Terjadi kesalahan dalam menghapus anggota.' });
+        }
+    };
+
+    async borrowBook(req, res) {
+        const { code } = req.params;
+        const { bookCode } = req.body;
+
+        try
+        {
+            const member = await Member.findOne({ code });
+            const book = await Book.findOne({ code: bookCode });
+
+            if (!member || !book)
+            {
+                return res.status(404).json({ error: 'Member or book not found' });
+            }
+
+            // Implementasikan aturan peminjaman di sini, seperti cek stok buku, apakah buku sudah dipinjam, dll.
+
+            member.borrowedBooks.push(bookCode);
+            await member.save();
+
+            book.isBorrowed = true;
+            book.borrowedBy = member.code;
+            await book.save();
+
+            res.status(200).json({ message: 'Book borrowed successfully' });
+        } catch (error)
+        {
+            console.error(error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    };
+
+    // Contoh implementasi endpoint untuk mengembalikan buku oleh anggota
+    async returnBook(req, res) {
+        const { code } = req.params;
+        const { bookCode } = req.body;
+
+        try
+        {
+            const member = await Member.findOne({ code });
+            const book = await Book.findOne({ code: bookCode });
+
+            if (!member || !book)
+            {
+                return res.status(404).json({ error: 'Member or book not found' });
+            }
+
+            // Implementasikan logika pengembalian buku di sini, seperti cek tanggal pengembalian, penalti, dll.
+
+            if (book.borrowedBy !== member.code)
+            {
+                return res.status(400).json({ error: 'Book does not belong to the member' });
+            }
+
+            // Hapus kode buku dari daftar buku yang dipinjam oleh anggota
+            member.borrowedBooks = member.borrowedBooks.filter(code => code !== bookCode);
+            await member.save();
+
+            // Menghapus nilai borrowedBy
+            book.borrowedBy = '';
+            await book.save();
+
+            res.status(200).json({ message: 'Book returned successfully' });
+        } catch (error)
+        {
+            console.error(error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
     }
 }
+module.exports = new memberController();
 
-
-// Kasus 2: Anggota mengembalikan buku
-// exports.returnBook = async (req, res) => {
-//     try
-//     {
-//         const code = req.params.code;
-//         const bookCode = req.body.code;
-//         const returnDate = new Date(req.body.returnDate);
-
-//         // Temukan anggota dan buku yang dikembalikan
-//         const member = await Member.findOne({ code: code });
-//         const book = await Book.findOne({ code: bookCode, borrowedBy: code });
-
-//         if (!member || !book)
-//         {
-//             return res.status(404).json({ error: 'Member or book not found' });
-//         }
-
-//         // Periksa apakah buku dikembalikan lebih dari 7 hari
-//         const currentDate = new Date();
-//         if (currentDate > returnDate)
-//         {
-//             // Terapkan hukuman pada anggota
-//             member.penaltyStartDate = currentDate;
-//             await member.save();
-//             return res.status(400).json({ error: 'Book returned late. Penalty applied.' });
-//         }
-
-//         // Mengembalikan buku
-//         book.isBorrowed = false;
-//         book.borrowedBy = null;
-
-//         // Simpan perubahan ke basis data
-//         await book.save();
-
-//         res.status(200).json({ message: 'Book returned successfully' });
-//     } catch (error)
-//     {
-//         console.error(error);
-//         res.status(500).json({ error: 'Internal Server Error' });
-//     }
-// }
