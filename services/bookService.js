@@ -1,79 +1,40 @@
 // services/bookService.js
 const Book = require('../models/Book');
 
-// Layanan untuk menampilkan semua buku
-exports.getAllBooks = async () => {
-    try
-    {
-        const books = await Book.find();
-        return books;
-    } catch (error)
-    {
-        throw new Error('Terjadi kesalahan dalam mengambil data buku.');
+class BookService {
+    async getAllBooks() {
+        return await Book.find();
     }
-};
 
-// Layanan untuk menambahkan buku baru
-exports.addBook = async (code, title, author, stock) => {
-    try
-    {
-        const newBook = new Book({ code, title, author, stock });
-        await newBook.save();
-        return newBook;
-    } catch (error)
-    {
-        throw new Error('Terjadi kesalahan dalam menambahkan buku.');
+    async getBookByCode(code) {
+        return await Book.findOne({ code });
     }
-};
 
-// Layanan untuk menampilkan detail buku berdasarkan kode buku
-exports.getBookByCode = async (code) => {
-    try
-    {
-        const book = await Book.findOne({ code });
+    async borrowBook(bookCode) {
+        const book = await Book.findOne({ code: bookCode });
         if (!book)
         {
-            throw new Error('Buku tidak ditemukan.');
+            throw new Error('Book not found');
         }
+        if (book.isBorrowed)
+        {
+            throw new Error('Book is already borrowed');
+        }
+        book.isBorrowed = true;
+        await book.save();
         return book;
-    } catch (error)
-    {
-        throw new Error('Terjadi kesalahan dalam mengambil data buku.');
     }
-};
 
-// Layanan untuk mengubah data buku
-exports.updateBook = async (code, title, author, stock) => {
-    try
-    {
-        const updatedBook = await Book.findOneAndUpdate(
-            { code },
-            { title, author, stock },
-            { new: true }
-        );
-        if (!updatedBook)
+    async returnBook(bookCode) {
+        const book = await Book.findOne({ code: bookCode });
+        if (!book)
         {
-            throw new Error('Buku tidak ditemukan.');
+            throw new Error('Book not found');
         }
-        return updatedBook;
-    } catch (error)
-    {
-        throw new Error('Terjadi kesalahan dalam mengubah data buku.');
+        book.isBorrowed = false;
+        await book.save();
+        return book;
     }
-};
+}
 
-// Layanan untuk menghapus buku berdasarkan kode buku
-exports.deleteBook = async (code) => {
-    try
-    {
-        const deletedBook = await Book.findOneAndDelete({ code });
-        if (!deletedBook)
-        {
-            throw new Error('Buku tidak ditemukan.');
-        } 
-        return deletedBook;
-    } catch (error)
-    {
-        throw new Error('Terjadi kesalahan dalam menghapus buku.');
-    }
-};
+module.exports = new BookService();
