@@ -20,7 +20,7 @@ const bookSchema = new mongoose.Schema({
         required: true,
     },
     borrowedBy: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: 'Member',
         default: null,
     },
@@ -28,6 +28,7 @@ const bookSchema = new mongoose.Schema({
         type: Date,
         default: null,
     },
+    isBorrowed: Boolean,
 });
 
 const Book = mongoose.model('Book', bookSchema);

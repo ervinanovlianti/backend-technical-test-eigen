@@ -11,10 +11,10 @@ const memberSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    booksBorrowed: {
-        type: Number,
-        default: 0,
-    },
+    borrowedBooks: [{ 
+        type: String, 
+        ref: 'Book' }],
+
     penalty: {
         type: Boolean,
         default: false,
