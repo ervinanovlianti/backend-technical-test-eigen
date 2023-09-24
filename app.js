@@ -16,8 +16,8 @@ const bookRoutes = require('./routes/bookRoutes');
 mongoose.connect('mongodb://localhost:27017/perpustakaan', { useNewUrlParser: true, useUnifiedTopology: true });
 
 // Gunakan rute-rute
-app.use('/api', memberRoutes); // contoh path '/api/members'
-app.use('/api', bookRoutes);   // contoh path '/api/books'
+app.use('/api', memberRoutes); // path '/api/members'
+app.use('/api', bookRoutes);   // path '/api/books'
 
 // Mulai server Express
 const port = process.env.PORT || 3000;
