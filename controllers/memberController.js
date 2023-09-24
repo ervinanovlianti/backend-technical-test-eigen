@@ -100,16 +100,31 @@ class memberController {
 
             if (!member || !book)
             {
-                return res.status(404).json({ error: 'Member or book not found' });
+                return res.status(400).json({ error: 'Member or book not found' });
             }
 
             // Implementasikan aturan peminjaman di sini, seperti cek stok buku, apakah buku sudah dipinjam, dll.
+            if (member.borrowedBooks.length >= 2)
+            {
+                return res.status(400).json({ error: 'Member cannot borrow more than 2 books' });
+            }
+
+            if (book.isBorrowed && book.stock == 0)
+            {
+                return res.status(400).json({ error: 'Book is already borrowed' });
+            }
+            // Periksa apakah buku sudah pernah dipinjam oleh anggota ini sebelumnya
+            if (member.borrowedBooks.includes(bookCode))
+            {
+                return res.status(400).json({ error: 'Member has already borrowed this book' });
+            }
 
             member.borrowedBooks.push(bookCode);
             await member.save();
 
             book.isBorrowed = true;
             book.borrowedBy = member.code;
+            book.stock--; // Kurangi stok buku
             await book.save();
 
             res.status(200).json({ message: 'Book borrowed successfully' });
@@ -148,6 +163,7 @@ class memberController {
 
             // Menghapus nilai borrowedBy
             book.borrowedBy = '';
+            book.stock++; // Tambah stok buku jika sudah dikembalikan
             await book.save();
 
             res.status(200).json({ message: 'Book returned successfully' });
