@@ -22,7 +22,6 @@ const bookSchema = new mongoose.Schema({
     borrowedBy: [{
         type: String,
         ref: 'Member',
-        default: null,
         }],
     dueDate: {
         type: Date,
