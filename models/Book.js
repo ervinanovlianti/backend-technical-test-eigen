@@ -19,11 +19,11 @@ const bookSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    borrowedBy: {
+    borrowedBy: [{
         type: String,
         ref: 'Member',
         default: null,
-    },
+        }],
     dueDate: {
         type: Date,
         default: null,
