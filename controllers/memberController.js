@@ -123,7 +123,7 @@ class memberController {
             await member.save();
 
             book.isBorrowed = true;
-            book.borrowedBy = member.code;
+            book.borrowedBy.push(member.code);
             book.stock--; // Kurangi stok buku
             await book.save();
 
@@ -135,7 +135,7 @@ class memberController {
         }
     };
 
-    // Contoh implementasi endpoint untuk mengembalikan buku oleh anggota
+    // Metode untuk mengembalikan buku oleh anggota
     async returnBook(req, res) {
         const { code } = req.params;
         const { bookCode } = req.body;
@@ -150,9 +150,8 @@ class memberController {
                 return res.status(404).json({ error: 'Member or book not found' });
             }
 
-            // Implementasikan logika pengembalian buku di sini, seperti cek tanggal pengembalian, penalti, dll.
-
-            if (book.borrowedBy !== member.code)
+            // Periksa apakah buku adalah buku yang dipinjam oleh anggota ini
+            if (!member.borrowedBooks.includes(bookCode))
             {
                 return res.status(400).json({ error: 'Book does not belong to the member' });
             }
@@ -161,9 +160,11 @@ class memberController {
             member.borrowedBooks = member.borrowedBooks.filter(code => code !== bookCode);
             await member.save();
 
-            // Menghapus nilai borrowedBy
-            book.borrowedBy = '';
-            book.stock++; // Tambah stok buku jika sudah dikembalikan
+            // Hapus nilai borrowedBy pada buku
+            book.borrowedBy = book.borrowedBy.filter(memberCode => memberCode !== member.code);
+
+            // Tambahkan stok buku karena buku dikembalikan
+            book.stock++;
             await book.save();
 
             res.status(200).json({ message: 'Book returned successfully' });
@@ -172,7 +173,8 @@ class memberController {
             console.error(error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
-    }
+    };
+
 }
 module.exports = new memberController();
 
